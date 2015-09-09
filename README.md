@@ -19,7 +19,7 @@ The good solution to this problem is to create two columns in your database:
   2. column of length 40, storing hashed value of url
 
 Then create an index on the second column. Class HashField implements a custom field in Django, which
-autoamtically stores the hashed value of the original field (such as url field) everytime the model is saved.
+automatically stores the hashed value of the original field (such as url field) every time the model is saved.
 
 Example
 -------

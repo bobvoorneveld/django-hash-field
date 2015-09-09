@@ -2,10 +2,7 @@ import hashlib
 
 from django.db import models
 
-from south.modelsinspector import add_introspection_rules
-
-
-_hashit = lambda s: hashlib.sha1(s).hexdigest()
+_hashit = lambda s: hashlib.sha1(s.encode('utf-8')).hexdigest()
 
 
 class HashField(models.CharField):
@@ -23,6 +20,14 @@ class HashField(models.CharField):
         kwargs.setdefault('editable', False)
         super(HashField, self).__init__(*args, **kwargs)
 
+    def deconstruct(self):
+        name, path, args, kwargs = super(HashField, self).deconstruct()
+        del kwargs['max_length']
+        del kwargs['null']
+        del kwargs['db_index']
+        del kwargs['editable']
+        return name, path, args, kwargs
+
     def calculate_hash(self, model_instance):
         original_value = getattr(model_instance, self.original)
         setattr(model_instance, self.attname, _hashit(original_value))
@@ -30,20 +35,6 @@ class HashField(models.CharField):
     def pre_save(self, model_instance, add):
         self.calculate_hash(model_instance)
         return super(HashField, self).pre_save(model_instance, add)
-
-
-# This tells South, how to store the field.
-# more information: http://south.readthedocs.org/en/0.7.6/customfields.html
-add_introspection_rules([
-    (
-        [HashField],
-        [],
-        {
-            "original": ["original", {}],
-        },
-    ),
-],
-["^myproject\.fields\.HashField"])  # use your own path to HashField
 
 
 class HashMixin(object):
